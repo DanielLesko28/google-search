@@ -17,33 +17,57 @@ interface SearchResultItem {
   };
 }
 
+const apiKey = import.meta.env.VITE_API_KEY;
+const cxKey = import.meta.env.VITE_CX_KEY;
+
 function App() {
   const [result, setResult] = useState<SearchResultItem[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
-    const fetchData = async () => {
+    if (!searchTerm) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setResult([]);
+      return;
+    }
+
+    const debounceTimeout = setTimeout(async () => {
       try {
         const response = await fetch(
-          "https://www.googleapis.com/customsearch/v1?key=AIzaSyCNNgFq67GsLtCH18fHPHbsyDWXER1zcG0&cx=b3afb02f3f21a4152&q=Slafkovsky"
+          `https://www.googleapis.com/customsearch/v1?key=${apiKey}&cx=${cxKey}&q=${encodeURIComponent(
+            searchTerm
+          )}`
         );
         const data = await response.json();
-        console.log("data in fetch", data);
 
         if (data.items) {
           setResult(data.items);
+        } else {
+          setResult([]);
         }
       } catch (error) {
         console.error("Fetch error:", error);
+        setResult([]);
       }
-    };
+    }, 500);
 
-    fetchData();
-  }, []);
+    return () => clearTimeout(debounceTimeout);
+  }, [searchTerm]);
+
+  console.log("result", result);
 
   return (
-    <>
+    <div className="w-full max-w-[1000px] mx-auto p-4 py-8">
       <h1>Hello Daniel</h1>
-      <input placeholder="Search..." />
+      <section className="flex items-center">
+        <input
+          placeholder="Search..."
+          className="my-4 mx-auto px-2 border-white border-2 rounded-md"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
+        <button onClick={() => setSearchTerm("")}>Clear</button>
+      </section>
 
       <div>
         {result.map((item, index) => (
@@ -56,7 +80,7 @@ function App() {
           </div>
         ))}
       </div>
-    </>
+    </div>
   );
 }
 
