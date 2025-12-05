@@ -23,6 +23,30 @@ const cxKey = import.meta.env.VITE_CX_KEY;
 function App() {
   const [result, setResult] = useState<SearchResultItem[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [startIndex, setStartIndex] = useState(1);
+  const [hasMore, setHasMore] = useState(false);
+
+  async function fetchResults(isNewSearch = false) {
+    try {
+      const response = await fetch(
+        `https://www.googleapis.com/customsearch/v1?key=${apiKey}&cx=${cxKey}&q=${encodeURIComponent(
+          searchTerm
+        )}&start=${startIndex}`
+      );
+      const data = await response.json();
+
+      const newItems = data.items || [];
+
+      // If it's a new search → replace
+      // If it's show more → append
+      setResult((prev) => (isNewSearch ? newItems : [...prev, ...newItems]));
+
+      // Check if more pages exist
+      setHasMore(!!data.queries?.nextPage);
+    } catch (e) {
+      console.error(e);
+    }
+  }
 
   useEffect(() => {
     if (!searchTerm) {
@@ -30,6 +54,10 @@ function App() {
       setResult([]);
       return;
     }
+
+    const timeout = setTimeout(() => {
+      fetchResults(true);
+    }, 500);
 
     const debounceTimeout = setTimeout(async () => {
       try {
@@ -54,11 +82,15 @@ function App() {
     return () => clearTimeout(debounceTimeout);
   }, [searchTerm]);
 
+  function handleShowMore() {
+    setStartIndex((prev) => prev + 10);
+    fetchResults(false);
+  }
+
   console.log("result", result);
 
   return (
     <div className="w-full max-w-[1000px] mx-auto p-4 py-8">
-      <h1>Hello Daniel</h1>
       <section className="flex items-center">
         <input
           placeholder="Search..."
@@ -79,6 +111,17 @@ function App() {
             </a>
           </div>
         ))}
+      </div>
+      {hasMore && (
+        <button
+          className="mt-4 p-2 bg-blue-500 text-white rounded"
+          onClick={handleShowMore}
+        >
+          Show More
+        </button>
+      )}
+      <div className="mx-auto text-center pt-8">
+        {searchTerm.length === 0 && <h1>Nothing to show</h1>}
       </div>
     </div>
   );
