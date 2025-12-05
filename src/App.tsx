@@ -1,21 +1,6 @@
 import { useEffect, useState } from "react";
 import "./App.css";
-
-interface SearchResultItem {
-  kind: string;
-  title: string;
-  htmlTitle: string;
-  link: string;
-  displayLink: string;
-  snippet: string;
-  htmlSnippet: string;
-  formattedUrl: string;
-  htmlFormattedUrl: string;
-  pagemap?: {
-    metatags?: Array<Record<string, string>>;
-    cse_image?: Array<{ src: string }>;
-  };
-}
+import type { SearchResultItem } from "../utils/types.ts";
 
 const apiKey = import.meta.env.VITE_API_KEY;
 const cxKey = import.meta.env.VITE_CX_KEY;
@@ -26,22 +11,18 @@ function App() {
   const [startIndex, setStartIndex] = useState(1);
   const [hasMore, setHasMore] = useState(false);
 
-  async function fetchResults(isNewSearch = false) {
+  async function fetchResults(isNewSearch = false, start = startIndex) {
     try {
       const response = await fetch(
         `https://www.googleapis.com/customsearch/v1?key=${apiKey}&cx=${cxKey}&q=${encodeURIComponent(
           searchTerm
-        )}&start=${startIndex}`
+        )}&start=${start}`
       );
-      const data = await response.json();
 
+      const data = await response.json();
       const newItems = data.items || [];
 
-      // If it's a new search → replace
-      // If it's show more → append
       setResult((prev) => (isNewSearch ? newItems : [...prev, ...newItems]));
-
-      // Check if more pages exist
       setHasMore(!!data.queries?.nextPage);
     } catch (e) {
       console.error(e);
@@ -52,42 +33,25 @@ function App() {
     if (!searchTerm) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setResult([]);
+      setStartIndex(1);
       return;
     }
 
-    // const timeout = setTimeout(() => {
-    //   fetchResults(true);
-    // }, 500);
-
-    const debounceTimeout = setTimeout(async () => {
-      try {
-        const response = await fetch(
-          `https://www.googleapis.com/customsearch/v1?key=${apiKey}&cx=${cxKey}&q=${encodeURIComponent(
-            searchTerm
-          )}`
-        );
-        const data = await response.json();
-
-        if (data.items) {
-          setResult(data.items);
-        } else {
-          setResult([]);
-        }
-      } catch (error) {
-        console.error("Fetch error:", error);
-        setResult([]);
-      }
+    const debounceTimeout = setTimeout(() => {
+      setStartIndex(1);
+      fetchResults(true, 1);
     }, 500);
 
     return () => clearTimeout(debounceTimeout);
   }, [searchTerm]);
 
   function handleShowMore() {
-    setStartIndex((prev) => prev + 10);
-    fetchResults(false);
+    setStartIndex((prev) => {
+      const next = prev + 10;
+      fetchResults(false, next);
+      return next;
+    });
   }
-
-  console.log("result", result);
 
   return (
     <div className="w-full max-w-[1000px] mx-auto p-4 py-8">
@@ -101,18 +65,32 @@ function App() {
         <button onClick={() => setSearchTerm("")}>Clear</button>
       </section>
 
-      <div>
-        {result.map((item, index) => (
-          <div key={index} style={{ marginBottom: "20px" }}>
-            <h3>{item.title}</h3>
-            <p>{item.snippet}</p>
-            <a href={item.link} target="_blank">
-              Open
-            </a>
-          </div>
-        ))}
-      </div>
-      {hasMore && (
+      <table className="w-full border border-gray-300 rounded-md">
+        <thead className="bg-gray-400 ">
+          <tr>
+            <th className="text-center p-2 border-b  border-r-2">Title</th>
+            <th className="text-center p-2 border-b">Link</th>
+          </tr>
+        </thead>
+        <tbody>
+          {result.map((item, index) => (
+            <tr key={index} className="border-b hover:bg-gray-50">
+              <td className="p-2 order-r-2 border-amber-600">{item.title}</td>
+              <td className="p-2">
+                <a
+                  href={item.link}
+                  target="_blank"
+                  className="text-blue-600 underline"
+                >
+                  Open
+                </a>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      {hasMore && searchTerm.length > 0 && (
         <button
           className="mt-4 p-2 bg-blue-500 text-white rounded"
           onClick={handleShowMore}
@@ -120,6 +98,7 @@ function App() {
           Show More
         </button>
       )}
+
       <div className="mx-auto text-center pt-8">
         {searchTerm.length === 0 && <h1>Nothing to show</h1>}
       </div>
