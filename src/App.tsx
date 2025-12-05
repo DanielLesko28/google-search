@@ -55,9 +55,9 @@ function App() {
       return;
     }
 
-    const timeout = setTimeout(() => {
-      fetchResults(true);
-    }, 500);
+    // const timeout = setTimeout(() => {
+    //   fetchResults(true);
+    // }, 500);
 
     const debounceTimeout = setTimeout(async () => {
       try {
