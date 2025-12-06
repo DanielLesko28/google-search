@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import type { SearchResultItem } from "../../utils/types";
+import type { SearchResultItem } from "../utils/types.ts";
 import { Link } from "react-router-dom";
+import { downloadCSV, downloadXLSX } from "../utils/actions.ts";
 
 const apiKey = import.meta.env.VITE_API_KEY;
 const cxKey = import.meta.env.VITE_CX_KEY;
@@ -21,6 +22,10 @@ const Home = () => {
 
       const data = await response.json();
       const newItems = data.items || [];
+      console.log("data from fetching", {
+        data,
+        newItems,
+      });
 
       setResult((prev) => (isNewSearch ? newItems : [...prev, ...newItems]));
       setHasMore(!!data.queries?.nextPage);
@@ -39,7 +44,7 @@ const Home = () => {
     const debounceTimeout = setTimeout(() => {
       setStartIndex(1);
       fetchResults(true, 1);
-    }, 700);
+    }, 500);
 
     return () => clearTimeout(debounceTimeout);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -51,46 +56,6 @@ const Home = () => {
       fetchResults(false, next);
       return next;
     });
-  }
-
-  /* ---------------------------- CSV DOWNLOAD ---------------------------- */
-  function downloadCSV() {
-    const headers = ["Title", "Link"];
-
-    const rows = result.map((item) => [
-      item.title.replace(/"/g, '""'),
-      item.link.replace(/"/g, '""'),
-    ]);
-
-    const csv = [headers, ...rows]
-      .map((row) => row.map((cell) => `"${cell}"`).join(","))
-      .join("\n");
-
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-
-    const link = document.createElement("a");
-    link.href = url;
-    link.setAttribute("download", "Searched_Result.csv");
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  }
-
-  /* ---------------------------- EXCEL DOWNLOAD ---------------------------- */
-  async function downloadXLSX() {
-    const XLSX = await import("xlsx");
-
-    const sheetData = result.map((item) => ({
-      Title: item.title,
-      Link: item.link,
-    }));
-
-    const worksheet = XLSX.utils.json_to_sheet(sheetData);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Results");
-
-    XLSX.writeFile(workbook, "search_results.xlsx");
   }
 
   return (
@@ -118,14 +83,14 @@ const Home = () => {
       {result.length > 0 && (
         <div className="flex gap-3 my-4">
           <button
-            onClick={downloadCSV}
+            onClick={() => downloadCSV(result)}
             className="p-2 bg-green-600 text-white rounded"
           >
             Download CSV
           </button>
 
           <button
-            onClick={downloadXLSX}
+            onClick={() => downloadXLSX(result)}
             className="p-2 bg-yellow-500 text-black rounded"
           >
             Download Excel
