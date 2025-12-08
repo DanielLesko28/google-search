@@ -1,7 +1,10 @@
 import { useEffect, useState } from "react";
 import type { SearchResultItem } from "../utils/types.ts";
-import { Link } from "react-router-dom";
 import { downloadCSV, downloadXLSX } from "../utils/actions.ts";
+import { Button, SimpleButton } from "../components/Button.tsx";
+import ArticlesTable from "../components/ArticlesTable.tsx";
+import MainHeading from "../components/MainHeading.tsx";
+import SearchInput from "../components/SearchInput.tsx";
 
 const apiKey = import.meta.env.VITE_API_KEY;
 const cxKey = import.meta.env.VITE_CX_KEY;
@@ -22,10 +25,6 @@ function Home() {
 
       const data = await response.json();
       const newItems = data.items || [];
-      console.log("data from fetching", {
-        data,
-        newItems,
-      });
 
       setResult((prev) => (isNewSearch ? newItems : [...prev, ...newItems]));
       setHasMore(!!data.queries?.nextPage);
@@ -44,7 +43,7 @@ function Home() {
     const debounceTimeout = setTimeout(() => {
       setStartIndex(1);
       fetchResults(true, 1);
-    }, 500);
+    }, 800);
 
     return () => clearTimeout(debounceTimeout);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -60,93 +59,54 @@ function Home() {
 
   return (
     <div className="w-full max-w-[1000px] mx-auto p-4 py-8">
-      <h1 className="text-2xl lg:text-4xl text-center py-6 text-amber-300">
-        Simple search
-      </h1>
+      <MainHeading />
 
       <section className="flex items-center">
-        <input
-          placeholder="Search..."
-          className="my-4 mx-auto px-2 border-white border-2 rounded-md"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+        <SearchInput
+          searchTerm={searchTerm}
+          changeFunction={(e) => setSearchTerm(e.target.value)}
         />
         {result.length > 0 && (
-          <button
-            onClick={() => setSearchTerm("")}
+          <SimpleButton
+            title="Clear"
             className="border-amber-500 border-2 ml-2 px-2"
-          >
-            Clear
-          </button>
+            onClickFunction={() => setSearchTerm("")}
+          />
         )}
       </section>
 
       {/* Export buttons */}
       {result.length > 0 && (
         <div className="flex gap-3 my-4">
-          <button
-            onClick={() => downloadCSV(result)}
+          <Button
+            data={result}
+            onClickFunction={downloadCSV}
             className="p-2 bg-green-600 text-white rounded"
-          >
-            Download CSV
-          </button>
+            title="Download CSV"
+          />
 
-          <button
-            onClick={() => downloadXLSX(result)}
+          <Button
+            data={result}
+            onClickFunction={downloadXLSX}
             className="p-2 bg-yellow-500 text-black rounded"
-          >
-            Download Excel
-          </button>
+            title="Download Excel"
+          />
         </div>
       )}
 
       {/* TABLE */}
       {searchTerm.length > 0 && result.length > 0 && (
-        <table className="w-full border border-gray-300 rounded-md">
-          <thead className="bg-gray-400">
-            <tr>
-              <th className="text-center p-2 border-b border-r-2">Title</th>
-              <th className="text-center p-2 border-b">Link</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {result.map((item, index) => (
-              <tr key={index} className="border-b hover:bg-gray-600 text-white">
-                <td className="p-2 pl-4 border-r-2">
-                  <Link
-                    to={`/link/${index}`}
-                    state={{ item }}
-                    className="text-white underline"
-                  >
-                    {item.title}
-                  </Link>
-                </td>
-
-                <td className="p-2">
-                  <a
-                    href={item.link}
-                    target="_blank"
-                    className="text-blue-400 underline"
-                  >
-                    Open
-                  </a>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <ArticlesTable data={result} />
       )}
 
       {/* Show More */}
       {hasMore && searchTerm.length > 0 && result.length > 0 && (
         <div className="flex justify-center">
-          <button
+          <SimpleButton
+            title="Show More"
             className="mt-4 p-2 bg-white text-black rounded"
-            onClick={handleShowMore}
-          >
-            Show More
-          </button>
+            onClickFunction={handleShowMore}
+          />
         </div>
       )}
 
