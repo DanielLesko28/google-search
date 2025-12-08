@@ -6,7 +6,7 @@ import { downloadCSV, downloadXLSX } from "../utils/actions.ts";
 const apiKey = import.meta.env.VITE_API_KEY;
 const cxKey = import.meta.env.VITE_CX_KEY;
 
-const Home = () => {
+function Home() {
   const [result, setResult] = useState<SearchResultItem[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [startIndex, setStartIndex] = useState(1);
@@ -155,6 +155,6 @@ const Home = () => {
       </div>
     </div>
   );
-};
+}
 
 export default Home;
