@@ -60,7 +60,9 @@ const Home = () => {
 
   return (
     <div className="w-full max-w-[1000px] mx-auto p-4 py-8">
-      <h1 className="text-center py-6 text-amber-300">Simple search</h1>
+      <h1 className="text-2xl lg:text-4xl text-center py-6 text-amber-300">
+        Simple search
+      </h1>
 
       <section className="flex items-center">
         <input
@@ -148,7 +150,7 @@ const Home = () => {
         </div>
       )}
 
-      <div className="mx-auto text-center pt-[200px]">
+      <div className="mx-auto text-center text-xl lg:text-4xl pt-[200px]">
         {searchTerm.length === 0 && <h1>Nothing to show</h1>}
       </div>
     </div>
