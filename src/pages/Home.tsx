@@ -6,7 +6,7 @@ import { downloadCSV, downloadXLSX } from "../utils/actions.ts";
 const apiKey = import.meta.env.VITE_API_KEY;
 const cxKey = import.meta.env.VITE_CX_KEY;
 
-const Home = () => {
+function Home() {
   const [result, setResult] = useState<SearchResultItem[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [startIndex, setStartIndex] = useState(1);
@@ -60,7 +60,9 @@ const Home = () => {
 
   return (
     <div className="w-full max-w-[1000px] mx-auto p-4 py-8">
-      <h1 className="text-center py-6 text-amber-300">Simple search</h1>
+      <h1 className="text-2xl lg:text-4xl text-center py-6 text-amber-300">
+        Simple search
+      </h1>
 
       <section className="flex items-center">
         <input
@@ -148,11 +150,11 @@ const Home = () => {
         </div>
       )}
 
-      <div className="mx-auto text-center pt-[200px]">
+      <div className="mx-auto text-center text-xl lg:text-4xl pt-[200px]">
         {searchTerm.length === 0 && <h1>Nothing to show</h1>}
       </div>
     </div>
   );
-};
+}
 
 export default Home;
