@@ -25,10 +25,6 @@ function Home() {
 
       const data = await response.json();
       const newItems = data.items || [];
-      console.log("data from fetching", {
-        data,
-        newItems,
-      });
 
       setResult((prev) => (isNewSearch ? newItems : [...prev, ...newItems]));
       setHasMore(!!data.queries?.nextPage);
